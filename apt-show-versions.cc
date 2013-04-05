@@ -50,13 +50,9 @@ std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
 bool has_older(pkgCache::PkgIterator p)
 {
     pkgCache::VerIterator current = p.CurrentVer();
-    
 
-    for (auto other = p.VersionList(); other.IsGood(); other++)
-        if (other->ID != current->ID && _system->VS->CmpVersion(current.VerStr(), other.VerStr()) > 0)
-            return true;
-
-    return false;
+    /* Version lists are ordered, so just check for a next item */
+    return current->NextVer != 0;
 }
 
 std::ostream& always_print(std::ostream& in)
