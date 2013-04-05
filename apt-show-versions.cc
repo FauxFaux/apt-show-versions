@@ -83,6 +83,7 @@ int main(int argc,const char **argv)
         {'h',"help","apt::show-versions::help",CommandLine::Boolean},
         {'i',"initialize","apt::show-versions::dummy-option",CommandLine::Boolean},
         {'v',"verbose","apt::show-versions::dummy-option",CommandLine::Boolean},
+        {'a',"allversions","apt::show-versions::all-versions",CommandLine::Boolean},
         {0,0,0,0}
     };
     CommandLine cmd(args, _config);
@@ -94,6 +95,10 @@ int main(int argc,const char **argv)
     if (_config->FindB("apt::show-versions::help")) {
         show_help();
         return 0;
+    }
+    if (_config->FindB("APT::Show-Versions::All-Versions")) {
+        std::cerr << "Please use apt-cache policy instead.\n";
+        return 1;
     }
 
     pkgInitSystem(*_config, _system);
@@ -107,15 +112,15 @@ int main(int argc,const char **argv)
         return 2;
     }
     /* This wastes some time, but hey, not much time */
-    if (cmd.FileList[0] == NULL)
+    if (cmd.FileList[0] == NULL) {
         for (auto p = cache->PkgBegin(); p != cache->PkgEnd(); p++)
             pkgs.insert(p);
+    }
         
     for (auto pp = pkgs.begin(); pp != pkgs.end(); pp++) {
         auto p = *pp;
         if (p->CurrentVer == 0)
             continue;
-
 
         auto current = p.CurrentVer();
         auto candidate = depcache->GetCandidateVer(p);
