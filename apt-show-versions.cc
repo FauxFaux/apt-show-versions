@@ -47,7 +47,7 @@ std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
     return name;
 }
 
-std::ostream& always_print(std::ostream& in)
+std::ostream& print_only(std::ostream& in)
 {
     static std::ofstream nullstream("/dev/null");
 
@@ -125,18 +125,18 @@ int main(int argc,const char **argv)
             if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))            
                 std::cout << p.FullName(true) << " " << current.VerStr() << " installed: No available version in archive\n";
         } else if (candidate->ID != current->ID) {
-            always_print(std::cout << my_name(p, candidate)) << " upgradable from " << current.VerStr() << " to " << candidate.VerStr() << "\n";
+            print_only(std::cout << my_name(p, candidate)) << " upgradable from " << current.VerStr() << " to " << candidate.VerStr() << "\n";
         } else if (current.FileList()->NextFile != 0) {
             /* Still installable */
             if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
-                always_print(std::cout << my_name(p, candidate)) << " uptodate " << current.VerStr() << "\n";
+                print_only(std::cout << my_name(p, candidate)) << " uptodate " << current.VerStr() << "\n";
         } else if (newer.IsGood() && newer->ID != current->ID) {
             /* Not installable version, but newer exists */
-            always_print(std::cout << my_name(p, newer)) << " *manually* upgradable from " << current.VerStr() << " to " << newer.VerStr() << "\n";
+            print_only(std::cout << my_name(p, newer)) << " *manually* upgradable from " << current.VerStr() << " to " << newer.VerStr() << "\n";
         } else if (current->NextVer != 0) {
             /* Not installable version, but older exists */
             if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
-                always_print(std::cout << my_name(p, candidate)) << " " << current.VerStr() << " newer than version in archive\n";
+                print_only(std::cout << my_name(p, candidate)) << " " << current.VerStr() << " newer than version in archive\n";
         }
     }
 
