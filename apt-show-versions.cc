@@ -59,17 +59,6 @@ bool has_older(pkgCache::PkgIterator p)
     return false;
 }
 
-pkgCache::VerIterator find_newest(pkgCache::PkgIterator p)
-{
-    pkgCache::VerIterator newest = p.CurrentVer();
-    
-    for (auto other = p.VersionList(); other.IsGood(); other++)
-        if (_system->VS->CmpVersion(newest.VerStr(), other.VerStr()) < 0)
-            newest = other;
-
-    return newest;
-}
-
 std::ostream& always_print(std::ostream& in)
 {
     static std::ofstream nullstream("/dev/null");
@@ -142,7 +131,7 @@ int main(int argc,const char **argv)
 
         auto current = p.CurrentVer();
         auto candidate = depcache->GetCandidateVer(p);
-        auto newer = find_newest(p);
+        auto newer = p.VersionList();
 
         if (p.VersionList()->NextVer == 0 && current.FileList()->NextFile == 0) {
             if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))            
