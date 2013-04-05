@@ -47,14 +47,6 @@ std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
     return name;
 }
 
-bool has_older(pkgCache::PkgIterator p)
-{
-    pkgCache::VerIterator current = p.CurrentVer();
-
-    /* Version lists are ordered, so just check for a next item */
-    return current->NextVer != 0;
-}
-
 std::ostream& always_print(std::ostream& in)
 {
     static std::ofstream nullstream("/dev/null");
@@ -141,7 +133,7 @@ int main(int argc,const char **argv)
         } else if (newer.IsGood() && newer->ID != current->ID) {
             /* Not installable version, but newer exists */
             always_print(std::cout << my_name(p, newer)) << " *manually* upgradable from " << current.VerStr() << " to " << newer.VerStr() << "\n";
-        } else if (has_older(p)) {
+        } else if (current->NextVer != 0) {
             /* Not installable version, but older exists */
             if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
                 always_print(std::cout << my_name(p, candidate)) << " " << current.VerStr() << " newer than version in archive\n";
