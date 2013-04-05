@@ -73,6 +73,7 @@ void show_help()
 
 int main(int argc,const char **argv)
 {
+    /* The apt::show-versions::* names might change later on! */
     CommandLine::Args args[] =  {
         {'u',"upgradeable","apt::show-versions::upgrades-only",CommandLine::Boolean},
         {'b',"brief","apt::show-versions::brief",CommandLine::Boolean},
