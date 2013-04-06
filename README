@@ -1,0 +1,43 @@
+apt-show-versions(1) rewrite in C++
+===================================
+This is a rewrite of the original apt-show-versions in C++ using the
+apt-pkg library from APT. It is about 100 times faster than the original
+Perl implementation.
+
+Changed behavior
+----------------
+* The output might be a bit different compared to the original implementation,
+  it will now always show codenames (if available) or archives otherwise
+  instead of the variant specified in sources.list.
+
+* The following options are not supported anymore:
+
+    -r|--regex; -R|--regex-all; and -p|--package
+
+        We are using the standard way for specifying package names on the
+        command-line now, just like all other APT tools.
+
+    -nh|--no-hold
+
+        Not yet implemented
+
+    -i|--initialize
+
+        Not needed anymore
+
+    -stf|--status-file and -ld|--list-dir
+
+        Those options have been removed. You can manually set the following
+        options via -o instead:
+
+            Dir::State::status  (--status-file)
+            Dir::State::lists   (--list-dir)
+
+    --verbose
+
+        I don't really know what that option does yet.
+
+    -a|--allversions
+
+        It might be better to refer people to apt-cache policy instead, which
+        provides equal information.
