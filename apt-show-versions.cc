@@ -39,6 +39,8 @@ std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
     auto name = p.FullName(true);
 
     for (auto vf = c.FileList(); c.IsGood(); c++) {
+        if (vf.File()->Flags & pkgCache::Flag::NotSource)
+            continue;
         if (vf.File().Codename())
             return name + "/" + vf.File().Codename();
         if (vf.File().Archive())
