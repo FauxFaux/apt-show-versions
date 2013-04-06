@@ -34,7 +34,7 @@
 #include <set>
 #include <fstream>
 
-std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
+static std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
 {
     auto name = p.FullName(true);
 
@@ -49,7 +49,7 @@ std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
     return name;
 }
 
-std::ostream& print_only(std::ostream& in)
+static std::ostream& print_only(std::ostream& in)
 {
     static std::ofstream nullstream("/dev/null");
 
@@ -60,7 +60,7 @@ std::ostream& print_only(std::ostream& in)
     return nullstream;
 }
 
-void show_help()
+static void show_help()
 {
     std::cout << "apt-show-versions from APT " << pkgVersion << "\n\n";
     std::cout << "Usage:\n";
