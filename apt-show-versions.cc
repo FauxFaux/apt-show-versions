@@ -83,8 +83,6 @@ int main(int argc,const char **argv)
         {'b',"brief","apt::show-versions::brief",CommandLine::Boolean},
         {'c',"","",CommandLine::ConfigFile},
         {'o',"","",CommandLine::ArbItem},
-        {'s',"status-file","Dir::State::status",CommandLine::HasArg},
-        {'l',"list-dir","Dir::State::Lists",CommandLine::HasArg},
         {'h',"help","apt::show-versions::help",CommandLine::Boolean},
         {'i',"initialize","apt::show-versions::dummy-option",CommandLine::Boolean},
         {'v',"verbose","apt::show-versions::dummy-option",CommandLine::Boolean},
