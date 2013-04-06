@@ -51,9 +51,11 @@ std::ostream& print_only(std::ostream& in)
 {
     static std::ofstream nullstream("/dev/null");
 
-    if (_config->FindB("APT::Show-Versions::Brief"))
-        return in << "\n", nullstream;
-    return in;
+    if (!_config->FindB("APT::Show-Versions::Brief"))
+        return in;
+
+    in << "\n";
+    return nullstream;
 }
 
 void show_help()
