@@ -75,6 +75,34 @@ static void show_help()
     std::cout << " -h,--help                    show help\n";
 }
 
+static void show_upgrade_info(const pkgCache::PkgIterator &p, pkgPolicy *depcache)
+{
+    if (p->CurrentVer == 0)
+        return;
+
+    auto current = p.CurrentVer();
+    auto candidate = depcache->GetCandidateVer(p);
+    auto newer = p.VersionList();
+
+    if (p.VersionList()->NextVer == 0 && current.FileList()->NextFile == 0) {
+        if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
+            std::cout << p.FullName(true) << " " << current.VerStr() << " installed: No available version in archive\n";
+    } else if (candidate->ID != current->ID) {
+        print_only(std::cout << my_name(p, candidate)) << " upgradable from " << current.VerStr() << " to " << candidate.VerStr() << "\n";
+    } else if (current.FileList()->NextFile != 0) {
+        /* Still installable */
+        if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
+            print_only(std::cout << my_name(p, candidate)) << " uptodate " << current.VerStr() << "\n";
+    } else if (newer.IsGood() && newer->ID != current->ID) {
+        /* Not installable version, but newer exists */
+        print_only(std::cout << my_name(p, newer)) << " *manually* upgradable from " << current.VerStr() << " to " << newer.VerStr() << "\n";
+    } else if (current->NextVer != 0) {
+        /* Not installable version, but older exists */
+        if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
+            print_only(std::cout << my_name(p, candidate)) << " " << current.VerStr() << " newer than version in archive\n";
+    }
+}
+
 int main(int argc,const char **argv)
 {
     /* The apt::show-versions::* names might change later on! */
@@ -108,44 +136,19 @@ int main(int argc,const char **argv)
     pkgCacheFile cachefile;
     pkgCache *cache = cachefile.GetPkgCache();
     pkgPolicy *depcache = cachefile.GetPolicy();
-    APT::PackageList pkgs = APT::PackageList::FromCommandLine(cachefile, cmd.FileList);
 
     if (cache == NULL || _error->PendingError()) {
         _error->DumpErrors();
         return 2;
     }
-    /* This wastes some time, but hey, not much time */
+
     if (cmd.FileList[0] == NULL) {
         for (auto p = cache->PkgBegin(); p != cache->PkgEnd(); p++)
-            pkgs.insert(p);
-    }
-        
-    for (auto pp = pkgs.begin(); pp != pkgs.end(); pp++) {
-        auto p = *pp;
-        if (p->CurrentVer == 0)
-            continue;
-
-        auto current = p.CurrentVer();
-        auto candidate = depcache->GetCandidateVer(p);
-        auto newer = p.VersionList();
-
-        if (p.VersionList()->NextVer == 0 && current.FileList()->NextFile == 0) {
-            if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))            
-                std::cout << p.FullName(true) << " " << current.VerStr() << " installed: No available version in archive\n";
-        } else if (candidate->ID != current->ID) {
-            print_only(std::cout << my_name(p, candidate)) << " upgradable from " << current.VerStr() << " to " << candidate.VerStr() << "\n";
-        } else if (current.FileList()->NextFile != 0) {
-            /* Still installable */
-            if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
-                print_only(std::cout << my_name(p, candidate)) << " uptodate " << current.VerStr() << "\n";
-        } else if (newer.IsGood() && newer->ID != current->ID) {
-            /* Not installable version, but newer exists */
-            print_only(std::cout << my_name(p, newer)) << " *manually* upgradable from " << current.VerStr() << " to " << newer.VerStr() << "\n";
-        } else if (current->NextVer != 0) {
-            /* Not installable version, but older exists */
-            if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
-                print_only(std::cout << my_name(p, candidate)) << " " << current.VerStr() << " newer than version in archive\n";
-        }
+            show_upgrade_info(p, depcache);
+    } else {
+        auto pkgs = APT::PackageList::FromCommandLine(cachefile, cmd.FileList);
+        for (auto pp = pkgs.begin(); pp != pkgs.end(); pp++)
+            show_upgrade_info(*pp, depcache);
     }
 
 }
