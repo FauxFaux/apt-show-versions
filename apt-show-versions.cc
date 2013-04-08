@@ -34,7 +34,7 @@
 #include <set>
 #include <fstream>
 
-pkgPolicy *policy;
+static pkgPolicy *policy;
 
 static std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
 {
@@ -81,13 +81,13 @@ static void show_help()
     std::cout << " -h,--help                    show help\n";
 }
 
-static void show_upgrade_info(const pkgCache::PkgIterator &p, pkgPolicy *depcache)
+static void show_upgrade_info(const pkgCache::PkgIterator &p)
 {
     if (p->CurrentVer == 0)
         return;
 
     auto current = p.CurrentVer();
-    auto candidate = depcache->GetCandidateVer(p);
+    auto candidate = policy->GetCandidateVer(p);
     auto newer = p.VersionList();
 
     if (p.VersionList()->NextVer == 0 && current.FileList()->NextFile == 0) {
@@ -141,9 +141,8 @@ int main(int argc,const char **argv)
     pkgInitSystem(*_config, _system);
     pkgCacheFile cachefile;
     pkgCache *cache = cachefile.GetPkgCache();
-    pkgPolicy *depcache = cachefile.GetPolicy();
 
-    policy = depcache;
+    policy = cachefile.GetPolicy();
 
     if (cache == NULL || _error->PendingError()) {
         _error->DumpErrors();
@@ -152,11 +151,11 @@ int main(int argc,const char **argv)
 
     if (cmd.FileList[0] == NULL) {
         for (auto p = cache->PkgBegin(); p != cache->PkgEnd(); p++)
-            show_upgrade_info(p, depcache);
+            show_upgrade_info(p);
     } else {
         auto pkgs = APT::PackageList::FromCommandLine(cachefile, cmd.FileList);
         for (auto pp = pkgs.begin(); pp != pkgs.end(); pp++)
-            show_upgrade_info(*pp, depcache);
+            show_upgrade_info(*pp);
     }
 
 }
