@@ -34,19 +34,25 @@
 #include <set>
 #include <fstream>
 
+pkgPolicy *policy;
+
 static std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
 {
-    auto name = p.FullName(true);
+    std::string name = p.FullName(true);
+    std::string my;
+    int prio = 0;
 
     for (auto vf = c.FileList(); c.IsGood(); c++) {
         if (vf.File()->Flags & pkgCache::Flag::NotSource)
             continue;
-        if (vf.File().Codename())
-            return name + "/" + vf.File().Codename();
-        if (vf.File().Archive())
-            return name + "/" + vf.File().Archive();
+        else if (!my.empty() && prio >= policy->GetPriority(vf.File()))
+            continue;
+        else if (vf.File().Codename())
+            my = name + "/" + vf.File().Codename();
+        else if (vf.File().Archive())
+            my = name + "/" + vf.File().Archive();
     }
-    return name;
+    return my.empty() ? name : my;
 }
 
 static std::ostream& print_only(std::ostream& in)
@@ -136,6 +142,8 @@ int main(int argc,const char **argv)
     pkgCacheFile cachefile;
     pkgCache *cache = cachefile.GetPkgCache();
     pkgPolicy *depcache = cachefile.GetPolicy();
+
+    policy = depcache;
 
     if (cache == NULL || _error->PendingError()) {
         _error->DumpErrors();
