@@ -163,15 +163,16 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
 
 static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstalled)
 {
-    if (_config->FindB("APT::Show-Versions::No-Hold", false) &&
-        p->SelectedState == pkgCache::State::Hold)
+    if (p->SelectedState == pkgCache::State::Hold &&
+        _config->FindB("APT::Show-Versions::No-Hold", false))
         return;
 
-    if (_config->FindB("APT::Show-Versions::All-Versions")) {
-        if (p->CurrentVer == 0 && !show_uninstalled)
-            return;
+    if (p->CurrentVer == 0 && !show_uninstalled)
+        return;
+
+    if (_config->FindB("APT::Show-Versions::All-Versions"))
         show_all_versions(p);
-    }
+
     if (p->CurrentVer == 0) {
         if (show_uninstalled || _config->FindB("APT::Show-Versions::All-Versions"))
             std::cout << p.FullName(true) << " not installed\n";
