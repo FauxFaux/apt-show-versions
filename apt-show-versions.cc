@@ -171,13 +171,12 @@ static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstal
         if (p->CurrentVer == 0 && !show_uninstalled)
             return;
         show_all_versions(p);
-        if (p->CurrentVer == 0) {
-            std::cout << p.FullName(true) << " not installed\n";
-            return;
-        }
     }
-    if (p->CurrentVer == 0)
+    if (p->CurrentVer == 0) {
+        if (show_uninstalled || _config->FindB("APT::Show-Versions::All-Versions"))
+            std::cout << p.FullName(true) << " not installed\n";
         return;
+    }
 
     auto current = p.CurrentVer();
     auto candidate = policy->GetCandidateVer(p);
@@ -251,11 +250,12 @@ int main(int argc,const char **argv)
         for (auto p = cache->PkgBegin(); p != cache->PkgEnd(); p++)
             show_upgrade_info(p, false);
     } else {
-        auto pkgs = APT::PackageList::FromCommandLine(cachefile, cmd.FileList);
         auto regex_all = _config->FindB("apt::show-versions::regex-all");
         for (size_t i = 0; cmd.FileList[i]; i++) {
             std::string pattern = cmd.FileList[i];
             auto pkgs = APT::PackageList::FromString(cachefile, pattern);
+
+            _error->DumpErrors();
 
             for (auto pp = pkgs.begin(); pp != pkgs.end(); pp++)
                 show_upgrade_info(*pp, regex_all || pkgs.getConstructor() !=
