@@ -129,8 +129,8 @@ static void describe_state(const pkgCache::PkgIterator &pkg)
 {
     static const char *selections[] = {"unknown", "install", "hold",
                                       "deinstall", "purge"};
-    static const char *installs[] = {"ok", "reinst-required", "hold-install",
-                                     "hold-reinst-required"};
+    static const char *installs[] = {"ok", "reinstreq", "hold",
+                                     "hold-reinstreq"};
     static const char *currents[] = {"not-installed", "unpacked",
                                      "half-configured", "INVALID",
                                      "half-installed", "config-files",
