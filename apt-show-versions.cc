@@ -37,6 +37,7 @@
 #include <array>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 
 static pkgPolicy *policy;
 
@@ -248,8 +249,21 @@ int main(int argc,const char **argv)
     }
 
     if (cmd.FileList[0] == NULL) {
-        for (auto p = cache->PkgBegin(); p != cache->PkgEnd(); p++)
-            show_upgrade_info(p, false);
+        std::vector<pkgCache::Group*> groups(cache->HeaderP->GroupCount);
+        for (auto p = cache->GrpBegin(); p != cache->GrpEnd(); p++)
+            groups[p->ID] = p;
+
+        std::sort(groups.begin(), groups.end(),
+                  [cache](pkgCache::Group *a, pkgCache::Group *b) {
+                    return strcmp(cache->StrP + a->Name,
+                                  cache->StrP + b->Name) < 0;
+        });
+
+        for (int i = 0; i < cache->HeaderP->GroupCount; i++) {
+            pkgCache::GrpIterator grp(*cache, groups[i]);
+            for (auto p = grp.PackageList(); !p.end(); p = grp.NextPkg(p))
+                show_upgrade_info(p, false);
+        }
     } else {
         auto regex_all = _config->FindB("apt::show-versions::regex-all");
         for (size_t i = 0; cmd.FileList[i]; i++) {
