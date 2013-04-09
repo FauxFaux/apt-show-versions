@@ -18,6 +18,12 @@ Changed behavior
         expression. It's only effect is to have specified regular expressions
         (with special characters like .?+*|[^$) match not-installed packages.
 
+    -a|--allversions
+
+        Instead of checking official release names and printing sources for
+        those releases or whether the package has no version in that release,
+        we simply print all sources. I expect to fix this later.
+
 * The following options are not supported anymore:
 
     -r|--regex; and -p|--package
@@ -44,8 +50,3 @@ Changed behavior
     --verbose
 
         I don't really know what that option does yet.
-
-    -a|--allversions
-
-        It might be better to refer people to apt-cache policy instead, which
-        provides equal information.
