@@ -28,6 +28,7 @@
 #include <apt-pkg/cacheset.h>
 #include <apt-pkg/cmndline.h>
 #include <apt-pkg/version.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -111,14 +112,38 @@ template<size_t N> struct TablePrinter {
     }
 };
 
+static void describe_state(const pkgCache::PkgIterator &pkg)
+{
+    static const char *selections[] = {"unknown", "install", "hold",
+                                      "deinstall", "purge"};
+    static const char *installs[] = {"ok", "reinst-required", "hold-install",
+                                     "hold-reinst-required"};
+    static const char *currents[] = {"not-installed", "unpacked",
+                                     "half-configured", "INVALID",
+                                     "half-installed", "config-files",
+                                     "installed", "triggers-awaited",
+                                     "triggers-pending"};
+
+    assert(pkg->SelectedState < sizeof(selections) / sizeof(selections[0]));
+    assert(pkg->InstState < sizeof(installs) / sizeof(installs[0]));
+    assert(pkg->CurrentState < sizeof(currents) / sizeof(currents[0]));
+
+    std::cout << " " << selections[pkg->SelectedState]
+              << " " << installs[pkg->InstState]
+              << " " << currents[pkg->CurrentState];
+}
+
 static void show_all_versions(const pkgCache::PkgIterator &pkg)
 {
     TablePrinter<4> table;
 
-    if (pkg->CurrentVer)
-        std::cout << pkg.FullName(true) << " " << pkg.CurrentVer().VerStr() << " install ok installed\n";
-    else
+    if (pkg->CurrentVer) {
+        std::cout << pkg.FullName(true) << " " << pkg.CurrentVer().VerStr();
+        describe_state(pkg);
+        std::cout << "\n";
+    } else {
         std::cout << "Not installed\n";
+    }
 
 
     for (auto ver = pkg.VersionList(); ver.IsGood(); ver++) {
