@@ -138,6 +138,10 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
 
 static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstalled)
 {
+    if (_config->FindB("APT::Show-Versions::No-Hold", false) &&
+        p->SelectedState == pkgCache::State::Hold)
+        return;
+
     if (_config->FindB("APT::Show-Versions::All-Versions")) {
         if (p->CurrentVer == 0 && !show_uninstalled)
             return;
@@ -186,6 +190,7 @@ int main(int argc,const char **argv)
         {'v',"verbose","apt::show-versions::dummy-option",CommandLine::Boolean},
         {'a',"allversions","apt::show-versions::all-versions",CommandLine::Boolean},
         {'R',"regex-all","apt::show-versions::regex-all",CommandLine::Boolean},
+        {'n',"no-hold","apt::show-versions::no-hold",CommandLine::Boolean},
         {0,0,0,0}
     };
     CommandLine cmd(args, _config);

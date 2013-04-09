@@ -25,9 +25,9 @@ Changed behavior
         We are using the standard way for specifying package names on the
         command-line now, just like all other APT tools.
 
-    -nh|--no-hold
+    -nh (short option only)
 
-        Not yet implemented
+        This short option has been replaced by -n.
 
     -i|--initialize
 
