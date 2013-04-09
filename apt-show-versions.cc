@@ -251,9 +251,9 @@ static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstal
 
     if (state == UPGRADE_NOT_INSTALLED) {
     } else if (state == UPGRADE_AUTOMATIC) {
-        print_only(std::cout << my_name(p, candidate)) << " upgradable from " << current.VerStr() << " to " << candidate.VerStr() << "\n";
+        print_only(std::cout << my_name(p, candidate)) << " upgradeable from " << current.VerStr() << " to " << candidate.VerStr() << "\n";
     } else if (state == UPGRADE_MANUAL) {
-        print_only(std::cout << my_name(p, newer)) << " *manually* upgradable from " << current.VerStr() << " to " << newer.VerStr() << "\n";
+        print_only(std::cout << my_name(p, newer)) << " *manually* upgradeable from " << current.VerStr() << " to " << newer.VerStr() << "\n";
     } else if (_config->FindB("APT::Show-Versions::Upgrades-Only")) {
     } else if (state == UPGRADE_NOT_AVAIL) {
         std::cout << p.FullName(true) << " " << current.VerStr() << " installed: No available version in archive\n";
