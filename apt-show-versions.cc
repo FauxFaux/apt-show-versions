@@ -223,15 +223,15 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
 /**
  * \brief Shows information about upgradeability of a single package
  */
-static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstalled)
+static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstalled) 
 {
-    const upgrade_state state = determine_upgradeability(p);
-
     if ((p->CurrentVer == 0 && !show_uninstalled))
         return;
     if (p->SelectedState == pkgCache::State::Hold &&
         _config->FindB("APT::Show-Versions::No-Hold", false))
         return;
+
+    const upgrade_state state = determine_upgradeability(p);
 
     if (state < UPGRADE_AUTOMATIC && _config->FindB("APT::Show-Versions::Upgrades-Only"))
         return;
