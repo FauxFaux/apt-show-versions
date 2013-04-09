@@ -190,6 +190,23 @@ static upgrade_state determine_upgradeability(const pkgCache::PkgIterator &p)
 }
 
 /**
+ * \brief Enable ordering for packages.
+ *
+ * We use that operator overload to have our APT::PackageSet instance
+ * sorted.
+ */
+static bool operator <(const pkgCache::PkgIterator &a,
+                       const pkgCache::PkgIterator &b)
+{
+    int value = strcmp(a.Name(), b.Name());
+
+    if (unlikely(value == 0))
+        value = strcmp(a.Arch(), b.Arch());
+
+    return value < 0;
+}
+
+/**
  * \brief Implementation of parts of the --allversions option
  */
 static void show_all_versions(const pkgCache::PkgIterator &pkg)
@@ -346,7 +363,7 @@ int main(int argc,const char **argv)
         auto regex_all = _config->FindB("apt::show-versions::regex-all");
         for (size_t i = 0; cmd.FileList[i]; i++) {
             std::string pattern = cmd.FileList[i];
-            auto pkgs = APT::PackageList::FromString(cachefile, pattern);
+            auto pkgs = APT::PackageSet::FromString(cachefile, pattern);
 
             _error->DumpErrors();
 
