@@ -210,6 +210,13 @@ int main(int argc,const char **argv)
 
     policy = cachefile.GetPolicy();
 
+    if (cmd.FileList[0] && _config->FindB("apt::show-versions::no-hold")) {
+        _error->Error("Cannot specify -n|--no-hold with a package name");
+    }
+    if (!cmd.FileList[0] && _config->FindB("apt::show-versions::regex-all")) {
+        _error->Error("Cannot specify -R|--regex-all without a pattern");
+    }
+
     if (cache == NULL || _error->PendingError()) {
         _error->DumpErrors();
         return 2;
