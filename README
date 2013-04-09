@@ -10,9 +10,17 @@ Changed behavior
   it will now always show codenames (if available) or archives otherwise
   instead of the variant specified in sources.list.
 
+* The following options changed behaviour:
+
+    -R|--regex-all
+
+        This option does not cause every argument to be considered a regular
+        expression. It's only effect is to have specified regular expressions
+        (with special characters like .?+*|[^$) match not-installed packages.
+
 * The following options are not supported anymore:
 
-    -r|--regex; -R|--regex-all; and -p|--package
+    -r|--regex; and -p|--package
 
         We are using the standard way for specifying package names on the
         command-line now, just like all other APT tools.

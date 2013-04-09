@@ -77,8 +77,7 @@ static void show_help()
     std::cout << "Options:\n";
     std::cout << " -c=?                         configuration file\n";
     std::cout << " -o=?                         option\n";
-    std::cout << " -s=?,--status-file=?         select a status file\n";
-    std::cout << " -l=?,--list-dir=?            select a lists directory\n";
+    std::cout << " -R,--regex-all               regular expressions apply to uninstalled packages\n";
     std::cout << " -u,--upgradeable             show only upgradeable packages\n";
     std::cout << " -b,--brief                   show package names only\n";
     std::cout << " -h,--help                    show help\n";
@@ -137,9 +136,11 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
     table.output();
 }
 
-static void show_upgrade_info(const pkgCache::PkgIterator &p)
+static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstalled)
 {
     if (_config->FindB("APT::Show-Versions::All-Versions")) {
+        if (p->CurrentVer == 0 && !show_uninstalled)
+            return;
         show_all_versions(p);
         if (p->CurrentVer == 0) {
             std::cout << p.FullName(true) << " not installed\n";
@@ -184,6 +185,7 @@ int main(int argc,const char **argv)
         {'i',"initialize","apt::show-versions::dummy-option",CommandLine::Boolean},
         {'v',"verbose","apt::show-versions::dummy-option",CommandLine::Boolean},
         {'a',"allversions","apt::show-versions::all-versions",CommandLine::Boolean},
+        {'R',"regex-all","apt::show-versions::regex-all",CommandLine::Boolean},
         {0,0,0,0}
     };
     CommandLine cmd(args, _config);
@@ -210,11 +212,18 @@ int main(int argc,const char **argv)
 
     if (cmd.FileList[0] == NULL) {
         for (auto p = cache->PkgBegin(); p != cache->PkgEnd(); p++)
-            show_upgrade_info(p);
+            show_upgrade_info(p, false);
     } else {
         auto pkgs = APT::PackageList::FromCommandLine(cachefile, cmd.FileList);
-        for (auto pp = pkgs.begin(); pp != pkgs.end(); pp++)
-            show_upgrade_info(*pp);
+        auto regex_all = _config->FindB("apt::show-versions::regex-all");
+        for (size_t i = 0; cmd.FileList[i]; i++) {
+            std::string pattern = cmd.FileList[i];
+            auto pkgs = APT::PackageList::FromString(cachefile, pattern);
+
+            for (auto pp = pkgs.begin(); pp != pkgs.end(); pp++)
+                show_upgrade_info(*pp, regex_all || pkgs.getConstructor() !=
+                                    APT::PackageContainerInterface::REGEX);
+        }
     }
 
 }
