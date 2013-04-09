@@ -41,6 +41,17 @@
 
 static pkgPolicy *policy;
 
+/**
+ * \brief Generate a name to display for a given package and candidate
+ *
+ * This returns the name of the package (possibly qualified with architecture)
+ * and if available, the name of the distribution it comes from. If the package
+ * exists in multiple distributions, the distribution with the highest priority
+ * is chosen.
+ *
+ * \param p The package to display
+ * \param c The candidate to take the distribution info from
+ */
 static std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
 {
     std::string name = p.FullName(true);
@@ -60,6 +71,13 @@ static std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
     return my.empty() ? name : my;
 }
 
+/**
+ * \brief Returns a null output stream if APT::Show-Versions::Brief is false
+ *
+ * If APT::Show-Versions::Brief is true, this prints a newline characters and
+ * returns a stream to /dev/null. Otherwise, it returns the stream it received
+ * as an argument.
+ */
 static std::ostream& print_only(std::ostream& in)
 {
     static std::ofstream nullstream("/dev/null");
@@ -71,20 +89,11 @@ static std::ostream& print_only(std::ostream& in)
     return nullstream;
 }
 
-static void show_help()
-{
-    std::cout << "apt-show-versions 0.30 using APT " << pkgVersion << "\n\n";
-    std::cout << "Usage:\n";
-    std::cout << " apt-show-versions            shows available versions of installed packages\n\n";
-    std::cout << "Options:\n";
-    std::cout << " -c=?                         configuration file\n";
-    std::cout << " -o=?                         option\n";
-    std::cout << " -R,--regex-all               regular expressions apply to uninstalled packages\n";
-    std::cout << " -u,--upgradeable             show only upgradeable packages\n";
-    std::cout << " -b,--brief                   show package names only\n";
-    std::cout << " -h,--help                    show help\n";
-}
-
+/**
+ * \brief Helper class to display a table
+ *
+ * This prints a table with aligned output.
+ */
 template<size_t N> struct TablePrinter {
     typedef std::array<std::string, N>  Line;
     std::vector<Line> lines;
@@ -113,6 +122,9 @@ template<size_t N> struct TablePrinter {
     }
 };
 
+/**
+ * \brief Returns a dpkg Status line, for displaying purposes
+ */
 static void describe_state(const pkgCache::PkgIterator &pkg)
 {
     static const char *selections[] = {"unknown", "install", "hold",
@@ -134,6 +146,9 @@ static void describe_state(const pkgCache::PkgIterator &pkg)
               << " " << currents[pkg->CurrentState];
 }
 
+/**
+ * \brief Implementation of parts of the --allversions option
+ */
 static void show_all_versions(const pkgCache::PkgIterator &pkg)
 {
     TablePrinter<4> table;
@@ -162,6 +177,9 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
     table.output();
 }
 
+/**
+ * \brief Shows information about upgradeability of a single package
+ */
 static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstalled)
 {
     if (p->SelectedState == pkgCache::State::Hold &&
@@ -201,6 +219,23 @@ static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstal
         if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
             print_only(std::cout << my_name(p, candidate)) << " " << current.VerStr() << " newer than version in archive\n";
     }
+}
+
+/**
+ * \brief Shows help output
+ */
+static void show_help()
+{
+    std::cout << "apt-show-versions using APT " << pkgVersion << "\n\n";
+    std::cout << "Usage:\n";
+    std::cout << " apt-show-versions            shows available versions of installed packages\n\n";
+    std::cout << "Options:\n";
+    std::cout << " -c=?                         configuration file\n";
+    std::cout << " -o=?                         option\n";
+    std::cout << " -R,--regex-all               regular expressions apply to uninstalled packages\n";
+    std::cout << " -u,--upgradeable             show only upgradeable packages\n";
+    std::cout << " -b,--brief                   show package names only\n";
+    std::cout << " -h,--help                    show help\n";
 }
 
 int main(int argc,const char **argv)
