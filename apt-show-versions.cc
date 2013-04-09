@@ -147,6 +147,49 @@ static void describe_state(const pkgCache::PkgIterator &pkg)
 }
 
 /**
+ * \brief Possible upgrade states
+ */
+enum upgrade_state {
+    /** The package in question is not installed */
+    UPGRADE_NOT_INSTALLED,
+    /** The package is not available anymore */
+    UPGRADE_NOT_AVAIL,
+    /** The package is up-to-date */
+    UPGRADE_UPTODATE,
+    /** The installed version is not available anymore, but a downgrade */
+    UPGRADE_DOWNGRADE,
+    /** An upgrade can be performed automatically */
+    UPGRADE_AUTOMATIC,
+    /** A manual upgrade can be performed */
+    UPGRADE_MANUAL,
+};
+
+/**
+ * \brief Determine the upgrade state of a package
+ */
+static upgrade_state determine_upgradeability(const pkgCache::PkgIterator &p)
+{
+    auto current = p.CurrentVer();
+    auto candidate = policy->GetCandidateVer(p);
+    auto newer = p.VersionList();
+
+    if (current.end())
+        return UPGRADE_NOT_INSTALLED;
+    else if (p.VersionList()->NextVer == 0 && current.FileList()->NextFile == 0)
+        return UPGRADE_NOT_AVAIL;
+    else if (candidate->ID != current->ID)
+        return UPGRADE_AUTOMATIC;
+    else if (current.FileList()->NextFile != 0)
+        return UPGRADE_UPTODATE;
+    else if (newer.IsGood() && newer->ID != current->ID)
+        return UPGRADE_MANUAL;
+    else if (current->NextVer != 0)
+        return UPGRADE_DOWNGRADE;
+
+    __builtin_trap();
+}
+
+/**
  * \brief Implementation of parts of the --allversions option
  */
 static void show_all_versions(const pkgCache::PkgIterator &pkg)
@@ -182,11 +225,15 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
  */
 static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstalled)
 {
+    const upgrade_state state = determine_upgradeability(p);
+
+    if ((p->CurrentVer == 0 && !show_uninstalled))
+        return;
     if (p->SelectedState == pkgCache::State::Hold &&
         _config->FindB("APT::Show-Versions::No-Hold", false))
         return;
 
-    if (p->CurrentVer == 0 && !show_uninstalled)
+    if (state < UPGRADE_AUTOMATIC && _config->FindB("APT::Show-Versions::Upgrades-Only"))
         return;
 
     if (_config->FindB("APT::Show-Versions::All-Versions"))
@@ -202,22 +249,18 @@ static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstal
     auto candidate = policy->GetCandidateVer(p);
     auto newer = p.VersionList();
 
-    if (p.VersionList()->NextVer == 0 && current.FileList()->NextFile == 0) {
-        if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
-            std::cout << p.FullName(true) << " " << current.VerStr() << " installed: No available version in archive\n";
-    } else if (candidate->ID != current->ID) {
+    if (state == UPGRADE_NOT_INSTALLED) {
+    } else if (state == UPGRADE_AUTOMATIC) {
         print_only(std::cout << my_name(p, candidate)) << " upgradable from " << current.VerStr() << " to " << candidate.VerStr() << "\n";
-    } else if (current.FileList()->NextFile != 0) {
-        /* Still installable */
-        if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
-            print_only(std::cout << my_name(p, candidate)) << " uptodate " << current.VerStr() << "\n";
-    } else if (newer.IsGood() && newer->ID != current->ID) {
-        /* Not installable version, but newer exists */
+    } else if (state == UPGRADE_MANUAL) {
         print_only(std::cout << my_name(p, newer)) << " *manually* upgradable from " << current.VerStr() << " to " << newer.VerStr() << "\n";
-    } else if (current->NextVer != 0) {
-        /* Not installable version, but older exists */
-        if (!_config->FindB("APT::Show-Versions::Upgrades-Only", false))
-            print_only(std::cout << my_name(p, candidate)) << " " << current.VerStr() << " newer than version in archive\n";
+    } else if (_config->FindB("APT::Show-Versions::Upgrades-Only")) {
+    } else if (state == UPGRADE_NOT_AVAIL) {
+        std::cout << p.FullName(true) << " " << current.VerStr() << " installed: No available version in archive\n";
+    } else if (state == UPGRADE_UPTODATE) {
+        print_only(std::cout << my_name(p, candidate)) << " uptodate " << current.VerStr() << "\n";
+    } else if (state == UPGRADE_DOWNGRADE) {
+        print_only(std::cout << my_name(p, candidate)) << " " << current.VerStr() << " newer than version in archive\n";
     }
 }
 
