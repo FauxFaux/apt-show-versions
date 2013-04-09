@@ -32,7 +32,10 @@
 #include <stdlib.h>
 #include <string>
 #include <set>
+#include <vector>
+#include <array>
 #include <fstream>
+#include <iomanip>
 
 static pkgPolicy *policy;
 
@@ -68,7 +71,7 @@ static std::ostream& print_only(std::ostream& in)
 
 static void show_help()
 {
-    std::cout << "apt-show-versions from APT " << pkgVersion << "\n\n";
+    std::cout << "apt-show-versions 0.30 using APT " << pkgVersion << "\n\n";
     std::cout << "Usage:\n";
     std::cout << " apt-show-versions            shows available versions of installed packages\n\n";
     std::cout << "Options:\n";
@@ -81,8 +84,68 @@ static void show_help()
     std::cout << " -h,--help                    show help\n";
 }
 
+    template<size_t N> struct TablePrinter {
+        typedef std::array<std::string, N>  Line;
+        std::vector<Line> lines;
+        size_t max[N];
+
+        TablePrinter() {
+            for (size_t i = 0; i < N; i++)
+                max[i] = 0;
+        }
+
+        void insert(Line &line) {
+            for (size_t i = 0; i < N; i++)
+                max[i] = line[i].size() > max[i] ? line[i].size() : max[i];
+
+            lines.push_back(line);
+        }
+
+        void output() {
+            std::cout.setf(std::ios::left);
+            for (auto line = lines.begin(); line != lines.end(); line++) {
+                for (size_t i = 0; i < N; i++)
+                    std::cout << std::setw(max[i] + (i < N - 1)) << (*line)[i];
+
+                std::cout << "\n";
+            }
+        }
+    };
+
+static void show_all_versions(const pkgCache::PkgIterator &pkg)
+{
+    TablePrinter<4> table;
+
+    if (pkg->CurrentVer)
+        std::cout << pkg.FullName(true) << " " << pkg.CurrentVer().VerStr() << " install ok installed\n";
+    else
+        std::cout << "Not installed\n";
+
+
+    for (auto ver = pkg.VersionList(); ver.IsGood(); ver++) {
+        for (auto vf = ver.FileList(); vf.IsGood(); vf++) {
+            if (vf.File()->Flags & pkgCache::Flag::NotSource)
+                continue;
+
+            TablePrinter<4>::Line line = {{pkg.FullName(true), ver.VerStr(), vf.File().Archive(), std::string() + vf.File().Site()}};
+
+            table.insert(line);
+        }
+
+    }
+
+    table.output();
+}
+
 static void show_upgrade_info(const pkgCache::PkgIterator &p)
 {
+    if (_config->FindB("APT::Show-Versions::All-Versions")) {
+        show_all_versions(p);
+        if (p->CurrentVer == 0) {
+            std::cout << p.FullName(true) << " not installed\n";
+            return;
+        }
+    }
     if (p->CurrentVer == 0)
         return;
 
@@ -132,10 +195,6 @@ int main(int argc,const char **argv)
     if (_config->FindB("apt::show-versions::help")) {
         show_help();
         return 0;
-    }
-    if (_config->FindB("APT::Show-Versions::All-Versions")) {
-        std::cerr << "Please use apt-cache policy instead.\n";
-        return 1;
     }
 
     pkgInitSystem(*_config, _system);
