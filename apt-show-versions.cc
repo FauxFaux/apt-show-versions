@@ -84,33 +84,33 @@ static void show_help()
     std::cout << " -h,--help                    show help\n";
 }
 
-    template<size_t N> struct TablePrinter {
-        typedef std::array<std::string, N>  Line;
-        std::vector<Line> lines;
-        size_t max[N];
+template<size_t N> struct TablePrinter {
+    typedef std::array<std::string, N>  Line;
+    std::vector<Line> lines;
+    size_t max[N];
 
-        TablePrinter() {
+    TablePrinter() {
+        for (size_t i = 0; i < N; i++)
+            max[i] = 0;
+    }
+
+    void insert(Line &line) {
+        for (size_t i = 0; i < N; i++)
+            max[i] = line[i].size() > max[i] ? line[i].size() : max[i];
+
+        lines.push_back(line);
+    }
+
+    void output() {
+        std::cout.setf(std::ios::left);
+        for (auto line = lines.begin(); line != lines.end(); line++) {
             for (size_t i = 0; i < N; i++)
-                max[i] = 0;
+                std::cout << std::setw(max[i] + (i < N - 1)) << (*line)[i];
+
+            std::cout << "\n";
         }
-
-        void insert(Line &line) {
-            for (size_t i = 0; i < N; i++)
-                max[i] = line[i].size() > max[i] ? line[i].size() : max[i];
-
-            lines.push_back(line);
-        }
-
-        void output() {
-            std::cout.setf(std::ios::left);
-            for (auto line = lines.begin(); line != lines.end(); line++) {
-                for (size_t i = 0; i < N; i++)
-                    std::cout << std::setw(max[i] + (i < N - 1)) << (*line)[i];
-
-                std::cout << "\n";
-            }
-        }
-    };
+    }
+};
 
 static void show_all_versions(const pkgCache::PkgIterator &pkg)
 {
