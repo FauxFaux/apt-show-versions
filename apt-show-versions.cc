@@ -42,6 +42,27 @@
 static pkgSourceList *list;
 static pkgPolicy *policy;
 
+
+/**
+ * \brief The official suites
+ *
+ * The first element is obviously not an official suite, it is just added to
+ * make code writing easier.
+ */
+static const char *official_suites[] = {
+    "",
+    "oldstable",
+    "stable",
+    "proposed-updates",
+    "stable-updates",
+    "testing",
+    "testing-proposed-updates",
+    "testing-updates",
+    "unstable",
+    "experimental",
+    NULL
+};
+
 /**
  * \brief Find a distribution in the sources.list file
  *
@@ -135,7 +156,12 @@ static std::ostream& print_only(std::ostream& in)
  * This prints a table with aligned output.
  */
 template<size_t N> struct TablePrinter {
-    typedef std::array<std::string, N>  Line;
+    typedef std::array<std::string, N>  Columns;
+    struct Line {
+        int tag;
+        std::string s;
+        Columns l;
+    };
     std::vector<Line> lines;
     size_t max[N];
 
@@ -144,18 +170,29 @@ template<size_t N> struct TablePrinter {
             max[i] = 0;
     }
 
-    void insert(Line &line) {
+    void insert(Columns &line) {
         for (size_t i = 0; i < N; i++)
             max[i] = line[i].size() > max[i] ? line[i].size() : max[i];
 
-        lines.push_back(line);
+        Line l = {1, "", line};
+
+        lines.push_back(l);
+    }
+
+    void insert(const std::string& line) {
+        Line l = {0, line, Columns()};
+        lines.push_back(l);
     }
 
     void output() {
         std::cout.setf(std::ios::left);
         for (auto line = lines.begin(); line != lines.end(); line++) {
-            for (size_t i = 0; i < N; i++)
-                std::cout << std::setw(max[i] + (i < N - 1)) << (*line)[i];
+            if (line->tag == 0) {
+                std::cout << line->s;
+            } else {
+                for (size_t i = 0; i < N; i++)
+                    std::cout << std::setw(max[i] + (i < N - 1)) << line->l[i];
+            }
 
             std::cout << "\n";
         }
@@ -247,6 +284,27 @@ static bool operator <(const pkgCache::PkgIterator &a,
 }
 
 /**
+ * \brief Check whether a given suite is present in the cache
+ */
+bool suite_is_in_cache(pkgCache *cache, const char *name) {
+    for (auto f = cache->FileBegin(); f != cache->FileEnd(); f++)
+            if (f->Archive && strcmp(f.Archive(), name) == 0)
+                return true;
+
+    return false;
+}
+/**
+ * \brief Check whether a given suite is an official one
+ */
+bool suite_is_official(pkgCache::PkgFileIterator file) {
+    for (auto s = official_suites; *s; s++)
+            if (**s && file->Archive && strcmp(*s, file.Archive()) == 0)
+                return true;
+
+    return false;
+}
+
+/**
  * \brief Implementation of parts of the --allversions option
  */
 static void show_all_versions(const pkgCache::PkgIterator &pkg)
@@ -261,15 +319,33 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
         std::cout << "Not installed\n";
     }
 
-    for (auto ver = pkg.VersionList(); ver.IsGood(); ver++) {
-        for (auto vf = ver.FileList(); vf.IsGood(); vf++) {
-            if (vf.File()->Flags & pkgCache::Flag::NotSource)
-                continue;
+    for (auto release = official_suites; *release; release++) {
+        if (release != official_suites && !suite_is_in_cache(pkg.Cache(), *release))
+            continue;
 
-            TablePrinter<4>::Line line = {{pkg.FullName(true), ver.VerStr(), find_distribution_name(vf.File()), std::string(vf.File().Site())}};
+        bool found = false;
+        for (auto ver = pkg.VersionList(); ver.IsGood(); ver++) {
+            for (auto vf = ver.FileList(); vf.IsGood(); vf++) {
+                if (vf.File()->Flags & pkgCache::Flag::NotSource)
+                    continue;
 
-            table.insert(line);
+                if (release == official_suites) {
+                    if (suite_is_official(vf.File()))
+                        continue;
+                } else if (strcmp(vf.File().Archive(), *release) != 0) {
+                    continue;
+                }
+
+                found = true;
+
+                TablePrinter<4>::Columns line = {{pkg.FullName(true), ver.VerStr(), find_distribution_name(vf.File()), std::string(vf.File().Site())}};
+
+                table.insert(line);
+            }
         }
+
+        if (!found && release != official_suites)
+            table.insert(std::string("No ") + *release + " version");
     }
 
     table.output();
