@@ -350,6 +350,7 @@ int main(int argc,const char **argv)
         {'a',"allversions","apt::show-versions::all-versions",CommandLine::Boolean},
         {'R',"regex-all","apt::show-versions::regex-all",CommandLine::Boolean},
         {'n',"no-hold","apt::show-versions::no-hold",CommandLine::Boolean},
+        {'p',"package","apt::show-versions::package",CommandLine::HasArg},
         {0,0,0,0}
     };
     CommandLine cmd(args, _config);
@@ -375,6 +376,16 @@ int main(int argc,const char **argv)
     }
     if (!cmd.FileList[0] && _config->FindB("apt::show-versions::regex-all")) {
         _error->Error("Cannot specify -R|--regex-all without a pattern");
+    }
+
+    /* Hack backward compatibility for -p back in */
+    if (!_config->Find("apt::show-versions::package").empty()) {
+        if (cmd.FileList[0])
+            _error->Error("Cannot specify -p|--package and more package names");
+
+        cmd.FileList = new const char *[2];
+        cmd.FileList[0] = strdup(_config->Find("apt::show-versions::package").c_str());
+        cmd.FileList[1] = NULL;
     }
 
     if (cache == NULL || _error->PendingError()) {

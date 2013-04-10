@@ -22,7 +22,7 @@ Changed behavior
 
 * The following options are not supported anymore:
 
-    -r|--regex; and -p|--package
+    -r|--regex
 
         We are using the standard way for specifying package names on the
         command-line now, just like all other APT tools.
@@ -38,6 +38,14 @@ Changed behavior
 
             Dir::State::status  (--status-file)
             Dir::State::lists   (--list-dir)
+
+* The following options have been provided for compatibility purposes, but
+  are actually useless:
+
+    -p|--package
+
+        There is no need to use this option, as you can just specify package
+        names (and regular expressions) directly.
 
 * The following options are dummy options that do nothing and are there for
   compatibility purposes
