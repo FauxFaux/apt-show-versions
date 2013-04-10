@@ -423,7 +423,7 @@ int main(int argc,const char **argv)
         {'c',"","",CommandLine::ConfigFile},
         {'o',"","",CommandLine::ArbItem},
         {'h',"help","apt::show-versions::help",CommandLine::Boolean},
-        {'i',"initialize","apt::show-versions::dummy-option",CommandLine::Boolean},
+        {'i',"initialize","apt::show-versions::initialize-cache",CommandLine::Boolean},
         {'v',"verbose","apt::show-versions::dummy-option",CommandLine::Boolean},
         {'a',"allversions","apt::show-versions::all-versions",CommandLine::Boolean},
         {'R',"regex-all","apt::show-versions::regex-all",CommandLine::Boolean},
@@ -464,6 +464,14 @@ int main(int argc,const char **argv)
         cmd.FileList = new const char *[2];
         cmd.FileList[0] = strdup(_config->Find("apt::show-versions::package").c_str());
         cmd.FileList[1] = NULL;
+    }
+
+    if (_config->FindB("apt::show-versions::initialize-cache")) {
+        _error->Warning("Use apt-cache gencaches instead of %s -i", argv[0]);
+        if (!_error->PendingError()) {
+            _error->DumpErrors();
+            return 0;
+        }
     }
 
     if (cache == NULL || _error->PendingError()) {
