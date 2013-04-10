@@ -368,8 +368,19 @@ int main(int argc,const char **argv)
             _error->DumpErrors();
 
             for (auto pp = pkgs.begin(); pp != pkgs.end(); pp++)
-                show_upgrade_info(*pp, regex_all || pkgs.getConstructor() !=
-                                    APT::PackageContainerInterface::REGEX);
+                show_upgrade_info(*pp, regex_all || pkgs.getConstructor() ==
+                                    APT::PackageContainerInterface::UNKNOWN);
+
+            /* If only a single package name is given, and -u is specified,
+             * we should exit with code 2.
+             */
+            if (pkgs.getConstructor() == APT::PackageContainerInterface::UNKNOWN
+                && cmd.FileList[1] == NULL
+                && _config->FindB("apt::show-versions::upgrades-only")
+                && pattern.find('*') == std::string::npos
+                && (pkgs.begin() == pkgs.end() ||
+                determine_upgradeability(*pkgs.begin()) < UPGRADE_AUTOMATIC))
+                    return 2;
         }
     }
 
