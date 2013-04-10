@@ -128,7 +128,7 @@ template<size_t N> struct TablePrinter {
 static void describe_state(const pkgCache::PkgIterator &pkg)
 {
     static const char *selections[] = {"unknown", "install", "hold",
-                                      "deinstall", "purge"};
+                                       "deinstall", "purge"};
     static const char *installs[] = {"ok", "reinstreq", "hold",
                                      "hold-reinstreq"};
     static const char *currents[] = {"not-installed", "unpacked",
@@ -221,7 +221,6 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
         std::cout << "Not installed\n";
     }
 
-
     for (auto ver = pkg.VersionList(); ver.IsGood(); ver++) {
         for (auto vf = ver.FileList(); vf.IsGood(); vf++) {
             if (vf.File()->Flags & pkgCache::Flag::NotSource)
@@ -231,7 +230,6 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
 
             table.insert(line);
         }
-
     }
 
     table.output();
@@ -240,7 +238,7 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
 /**
  * \brief Shows information about upgradeability of a single package
  */
-static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstalled) 
+static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstalled)
 {
     if ((p->CurrentVer == 0 && !show_uninstalled))
         return;
@@ -369,7 +367,7 @@ int main(int argc,const char **argv)
 
             for (auto pp = pkgs.begin(); pp != pkgs.end(); pp++)
                 show_upgrade_info(*pp, regex_all || pkgs.getConstructor() ==
-                                    APT::PackageContainerInterface::UNKNOWN);
+                                  APT::PackageContainerInterface::UNKNOWN);
 
             /* If only a single package name is given, and -u is specified,
              * we should exit with code 2.
@@ -379,8 +377,8 @@ int main(int argc,const char **argv)
                 && _config->FindB("apt::show-versions::upgrades-only")
                 && pattern.find('*') == std::string::npos
                 && (pkgs.begin() == pkgs.end() ||
-                determine_upgradeability(*pkgs.begin()) < UPGRADE_AUTOMATIC))
-                    return 2;
+                    determine_upgradeability(*pkgs.begin()) < UPGRADE_AUTOMATIC))
+                return 2;
         }
     }
 
