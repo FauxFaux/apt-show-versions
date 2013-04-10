@@ -66,7 +66,10 @@ static const std::string& find_distribution_name(pkgCache::PkgFileIterator file)
                 size_t subdistro = distro.find_first_of('/');
                 if (subdistro != std::string::npos)
                     distro.erase(subdistro);
-                return map[file->ID] = distro;
+
+                if ((file->Archive && distro == file.Archive()) ||
+                    (file->Codename && distro == file.Codename()))
+                    return map[file->ID] = distro;
             }
       }
    }
