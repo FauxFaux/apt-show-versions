@@ -384,7 +384,6 @@ static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstal
         print_only(std::cout << my_name(p, candidate)) << " upgradeable from " << current.VerStr() << " to " << candidate.VerStr() << "\n";
     } else if (state == UPGRADE_MANUAL) {
         print_only(std::cout << my_name(p, newer)) << " *manually* upgradeable from " << current.VerStr() << " to " << newer.VerStr() << "\n";
-    } else if (_config->FindB("APT::Show-Versions::Upgrades-Only")) {
     } else if (state == UPGRADE_NOT_AVAIL) {
         std::cout << p.FullName(true) << " " << current.VerStr() << " installed: No available version in archive\n";
     } else if (state == UPGRADE_UPTODATE) {
