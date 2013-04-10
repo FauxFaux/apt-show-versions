@@ -332,7 +332,9 @@ static void show_help()
     std::cout << " -o=?                         option\n";
     std::cout << " -R,--regex-all               regular expressions apply to uninstalled packages\n";
     std::cout << " -u,--upgradeable             show only upgradeable packages\n";
+    std::cout << " -a,--allversions             show all versions\n";
     std::cout << " -b,--brief                   show package names only\n";
+    std::cout << " -n,--no-hold                 do not show hold packages\n";
     std::cout << " -h,--help                    show help\n";
 }
 
