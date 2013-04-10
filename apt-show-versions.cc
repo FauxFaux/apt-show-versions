@@ -60,8 +60,14 @@ static const std::string& find_distribution_name(pkgCache::PkgFileIterator file)
     for (auto i = list->begin(); i != list->end(); ++i) {
         vector<pkgIndexFile *> *indexes = (*i)->GetIndexFiles();
         for (auto filep = indexes->begin(); filep != indexes->end(); ++filep) {
-            if ((*filep)->FindInCache(*file.Cache()) == file)
-                return map[file->ID] = std::string((**i).GetDist());
+            if ((*filep)->FindInCache(*file.Cache()) == file) {
+                std::string distro = (**i).GetDist();
+                /* For stable/updates and similar, we want to display stable */
+                size_t subdistro = distro.find_first_of('/');
+                if (subdistro != std::string::npos)
+                    distro.erase(subdistro);
+                return map[file->ID] = distro;
+            }
       }
    }
 
