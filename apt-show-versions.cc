@@ -39,18 +39,37 @@
 #include <iomanip>
 #include <algorithm>
 
+static pkgSourceList *list;
 static pkgPolicy *policy;
 
 /**
  * \brief Find a distribution in the sources.list file
+ *
+ * This keeps a cache of previous call results, as a lookup currently involves
+ * several stat() syscalls when calling FindInCache().
  */
-static std::string find_distribution_name(pkgCache::PkgFileIterator file)
+static const std::string& find_distribution_name(pkgCache::PkgFileIterator file)
 {
+    static std::map<unsigned int, std::string> map;
+
+    try {
+        return map.at(file->ID);
+    } catch (const std::out_of_range& e) {
+    }
+
+    for (auto i = list->begin(); i != list->end(); ++i) {
+        vector<pkgIndexFile *> *indexes = (*i)->GetIndexFiles();
+        for (auto filep = indexes->begin(); filep != indexes->end(); ++filep) {
+            if ((*filep)->FindInCache(*file.Cache()) == file)
+                return map[file->ID] = std::string((**i).GetDist());
+      }
+   }
+
     if (file->Archive)
-        return std::string(file.Archive());
+        return map[file->ID] = std::string(file.Archive());
     if (file->Codename)
-        return std::string(file.Codename());
-    return std::string();
+        return map[file->ID] = std::string(file.Codename());
+    return map[file->ID] = std::string();
 }
 
 /**
@@ -339,6 +358,7 @@ int main(int argc,const char **argv)
     pkgCacheFile cachefile;
     pkgCache *cache = cachefile.GetPkgCache();
 
+    list = cachefile.GetSourceList();
     policy = cachefile.GetPolicy();
 
     if (cmd.FileList[0] && _config->FindB("apt::show-versions::no-hold")) {

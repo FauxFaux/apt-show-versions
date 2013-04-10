@@ -6,10 +6,6 @@ Perl implementation.
 
 Changed behavior
 ----------------
-* The output might be a bit different compared to the original implementation,
-  it will now always show codenames (if available) or archives otherwise
-  instead of the variant specified in sources.list.
-
 * The following options changed behaviour:
 
     -R|--regex-all
