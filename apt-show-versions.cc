@@ -38,6 +38,7 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
+#include <stdexcept>
 
 static pkgSourceList *list;
 static pkgPolicy *policy;
