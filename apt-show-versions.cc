@@ -370,17 +370,13 @@ static void show_upgrade_info(const pkgCache::PkgIterator &p, bool show_uninstal
     if (_config->FindB("APT::Show-Versions::All-Versions"))
         show_all_versions(p);
 
-    if (p->CurrentVer == 0) {
-        if (show_uninstalled || _config->FindB("APT::Show-Versions::All-Versions"))
-            std::cout << p.FullName(true) << " not installed\n";
-        return;
-    }
-
     auto current = p.CurrentVer();
     auto candidate = policy->GetCandidateVer(p);
     auto newer = p.VersionList();
 
     if (state == UPGRADE_NOT_INSTALLED) {
+        if (show_uninstalled || _config->FindB("APT::Show-Versions::All-Versions"))
+            std::cout << p.FullName(true) << " not installed\n";
     } else if (state == UPGRADE_AUTOMATIC) {
         print_only(std::cout << my_name(p, candidate)) << " upgradeable from " << current.VerStr() << " to " << candidate.VerStr() << "\n";
     } else if (state == UPGRADE_MANUAL) {
