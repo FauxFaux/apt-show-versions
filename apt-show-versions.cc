@@ -63,10 +63,10 @@ static std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
             continue;
         else if (!my.empty() && prio >= policy->GetPriority(vf.File()))
             continue;
-        else if (vf.File().Codename())
-            my = name + "/" + vf.File().Codename();
         else if (vf.File().Archive())
             my = name + "/" + vf.File().Archive();
+        else if (vf.File().Codename())
+            my = name + "/" + vf.File().Codename();
     }
     return my.empty() ? name : my;
 }
