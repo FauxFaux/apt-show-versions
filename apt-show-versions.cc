@@ -120,14 +120,17 @@ static std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
     int prio = 0;
 
     for (auto vf = c.FileList(); c.IsGood(); c++) {
+        auto this_prio = policy->GetPriority(vf.File());
         if (vf.File()->Flags & pkgCache::Flag::NotSource)
             continue;
-        else if (!my.empty() && prio >= policy->GetPriority(vf.File()))
+        else if (!my.empty() && prio >= this_prio)
             continue;
 
         std::string distro = find_distribution_name(vf.File());
-        if (!distro.empty())
+        if (!distro.empty()) {
             my = name + "/" + distro;
+            prio = this_prio;
+        }
     }
     return my.empty() ? name : my;
 }
