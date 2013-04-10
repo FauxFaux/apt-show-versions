@@ -476,7 +476,7 @@ int main(int argc,const char **argv)
 
     if (cache == NULL || _error->PendingError()) {
         _error->DumpErrors();
-        return 2;
+        return 1;
     }
 
     if (cmd.FileList[0] == NULL) {
