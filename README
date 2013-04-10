@@ -31,10 +31,6 @@ Changed behavior
 
         This short option has been replaced by -n.
 
-    -i|--initialize
-
-        Not needed anymore
-
     -stf|--status-file and -ld|--list-dir
 
         Those options have been removed. You can manually set the following
@@ -43,6 +39,13 @@ Changed behavior
             Dir::State::status  (--status-file)
             Dir::State::lists   (--list-dir)
 
-    --verbose
+* The following options are dummy options that do nothing and are there for
+  compatibility purposes
+
+    -i|--initialize
+
+        Not needed anymore
+
+    -v|--verbose
 
         I don't really know what that option does yet.
