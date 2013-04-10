@@ -42,6 +42,18 @@
 static pkgPolicy *policy;
 
 /**
+ * \brief Find a distribution in the sources.list file
+ */
+static std::string find_distribution_name(pkgCache::PkgFileIterator file)
+{
+    if (file->Archive)
+        return std::string(file.Archive());
+    if (file->Codename)
+        return std::string(file.Codename());
+    return std::string();
+}
+
+/**
  * \brief Generate a name to display for a given package and candidate
  *
  * This returns the name of the package (possibly qualified with architecture)
@@ -63,10 +75,10 @@ static std::string my_name(pkgCache::PkgIterator p, pkgCache::VerIterator c)
             continue;
         else if (!my.empty() && prio >= policy->GetPriority(vf.File()))
             continue;
-        else if (vf.File().Archive())
-            my = name + "/" + vf.File().Archive();
-        else if (vf.File().Codename())
-            my = name + "/" + vf.File().Codename();
+
+        std::string distro = find_distribution_name(vf.File());
+        if (!distro.empty())
+            my = name + "/" + distro;
     }
     return my.empty() ? name : my;
 }
@@ -226,7 +238,7 @@ static void show_all_versions(const pkgCache::PkgIterator &pkg)
             if (vf.File()->Flags & pkgCache::Flag::NotSource)
                 continue;
 
-            TablePrinter<4>::Line line = {{pkg.FullName(true), ver.VerStr(), vf.File().Archive(), std::string() + vf.File().Site()}};
+            TablePrinter<4>::Line line = {{pkg.FullName(true), ver.VerStr(), find_distribution_name(vf.File()), std::string(vf.File().Site())}};
 
             table.insert(line);
         }
