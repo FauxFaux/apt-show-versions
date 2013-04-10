@@ -352,7 +352,7 @@ int main(int argc,const char **argv)
                                   cache->StrP + b->Name) < 0;
         });
 
-        for (int i = 0; i < cache->HeaderP->GroupCount; i++) {
+        for (size_t i = 0; i < cache->HeaderP->GroupCount; i++) {
             pkgCache::GrpIterator grp(*cache, groups[i]);
             for (auto p = grp.PackageList(); !p.end(); p = grp.NextPkg(p))
                 show_upgrade_info(p, false);
